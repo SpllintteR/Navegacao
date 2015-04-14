@@ -154,119 +154,138 @@ public class MapaTrapezoidal {
 	}
 
 	private void encontrarPassos(final List<Passo> passos, final Ponto ponto, final Ponto ultimoPonto) {
-		Passo p = azulNaMesmaLinhaOuColunaSemObstaculos(ponto);
-		while (p == null) {
-			Passo passo = getVerdeEmAlgumaDirecao(ponto);
+		List<Passo> p = azulNaMesmaColuna(ponto);
+		while (p != null) {
+			passos.add(p);
+		}
+		Passo passo = getVerdeEmAlgumaDirecao(ponto);
+		if (passo != null) {
+			passos.add(passo);
+		} else {
+			passo = getAmareloEmAlgumaDirecao(ponto);
 			if (passo != null) {
 				passos.add(passo);
 			} else {
-				passo = getAmareloEmAlgumaDirecao(ponto);
+				passo = getBrancoEmAlgumaDirecao(ponto);
 				if (passo != null) {
 					passos.add(passo);
 				} else {
-					passo = getBrancoEmAlgumaDirecao(ponto);
-					if (passo != null) {
-						passos.add(passo);
+					marcaJafoi(ponto);
+					ponto = ultimoPonto;
+				}
+			}
+		}
+	}
+}
+
+private void marcaJafoi(final Ponto ponto) {
+	pontos[ponto.getX()][ponto.getY()] = OBSTACULO;
+}
+
+private Passo emAlgumaDirecao(final Ponto ponto, final int cor) {
+	if (ponto.getY() != (pontos[0].length - 1)) {
+		if (pontos[ponto.getX()][ponto.getY() + 1] == cor) {
+			return Passo.DIREITA;
+		}
+	}
+	if (ponto.getY() > 0) {
+		if (pontos[ponto.getX()][ponto.getY() - 1] == cor) {
+			return Passo.ESQUERDA;
+		}
+	}
+	if (ponto.getX() != (pontos.length - 1)) {
+		if (pontos[ponto.getX() + 1][ponto.getY()] == cor) {
+			return Passo.BAIXO;
+		}
+	}
+	if (ponto.getX() > 0) {
+		if (pontos[ponto.getX() - 1][ponto.getY()] == cor) {
+			return Passo.CIMA;
+		}
+	}
+	return null;
+}
+
+private Passo getBrancoEmAlgumaDirecao(final Ponto ponto) {
+	return emAlgumaDirecao(ponto, BRANCO);
+}
+
+private Passo getAmareloEmAlgumaDirecao(final Ponto ponto) {
+	return emAlgumaDirecao(ponto, AMARELO);
+}
+
+private Passo getVerdeEmAlgumaDirecao(final Ponto ponto) {
+	return emAlgumaDirecao(ponto, VERDE);
+}
+
+private List<Passo> azulNaMesmaColuna(final Ponto ponto) {
+	for (int i = ponto.getX(); i < pontos.length; i++) {
+		if (pontos[i][ponto.getY() == AZUL]) {
+			List<Passo> passos = new ArrayList();
+			for (int j = 0; j < (i - ponto.getX()); j++) {
+				passos.add(Passo.BAIXO);
+			}
+			return passos;
+		}
+	}
+	for (int i = ponto.getX(); i < pontos.length; i--) {
+		if (pontos[i][ponto.getY() == AZUL]) {
+			List<Passo> passos = new ArrayList();
+			for (int j = 0; j < (i - ponto.getX()); j++) {
+				passos.add(Passo.CIMA);
+			}
+			return passos;
+		}
+	}
+}
+
+private void calcularPontosMediosEIntersecoes(final Cenario cenario) {
+	pontos = new int[cenario.getLinhas()][cenario.getColunas()];
+	for (Ponto p : cenario.getPontosInvalidos()) {
+		pontos[p.getX()][p.getY()] = -1;
+	}
+	fim = cenario.getFim();
+	inicio = cenario.getInicio();
+
+	pontos[fim.getX()][fim.getY()] = INICIO;
+
+	for (int i = 0; i < pontos.length; i++) {
+		int count = 0;
+		for (int j = 0; j < pontos[i].length; j++) {
+			if (pontos[i][j] == OBSTACULO) {
+				if (count > 0) {
+					if ((count % 2) == 0) {
+						pontos[i][(count / 2)] = VERDE;
 					} else {
-						marcaJafoi(ponto);
-						ponto = ultimoPonto;
+						pontos[i][(int) ((count / 2) + 0.5)] = VERDE;
 					}
 				}
+				count = 0;
+			} else {
+				count++;
 			}
 		}
 	}
 
-	private void marcaJafoi(final Ponto ponto) {
-		pontos[ponto.getX()][ponto.getY()] = OBSTACULO;
-	}
-
-	private Passo emAlgumaDirecao(final Ponto ponto, final int cor) {
-		if (ponto.getY() != (pontos[0].length - 1)) {
-			if (pontos[ponto.getX()][ponto.getY() + 1] == cor) {
-				return Passo.DIREITA;
-			}
-		}
-		if (ponto.getY() > 0) {
-			if (pontos[ponto.getX()][ponto.getY() - 1] == cor) {
-				return Passo.ESQUERDA;
-			}
-		}
-		if (ponto.getX() != (pontos.length - 1)) {
-			if (pontos[ponto.getX() + 1][ponto.getY()] == cor) {
-				return Passo.BAIXO;
-			}
-		}
-		if (ponto.getX() > 0) {
-			if (pontos[ponto.getX() - 1][ponto.getY()] == cor) {
-				return Passo.CIMA;
-			}
-		}
-		return null;
-	}
-
-	private Passo getBrancoEmAlgumaDirecao(final Ponto ponto) {
-		return emAlgumaDirecao(ponto, BRANCO);
-	}
-
-	private Passo getAmareloEmAlgumaDirecao(final Ponto ponto) {
-		return emAlgumaDirecao(ponto, AMARELO);
-	}
-
-	private Passo getVerdeEmAlgumaDirecao(final Ponto ponto) {
-		return emAlgumaDirecao(ponto, VERDE);
-	}
-
-	private Passo azulNaMesmaLinhaOuColunaSemObstaculos(final Ponto ponto) {
-		return emAlgumaDirecao(ponto, AZUL);
-	}
-
-	private void calcularPontosMediosEIntersecoes(final Cenario cenario) {
-		pontos = new int[cenario.getLinhas()][cenario.getColunas()];
-		for (Ponto p : cenario.getPontosInvalidos()) {
-			pontos[p.getX()][p.getY()] = -1;
-		}
-		fim = cenario.getFim();
-		inicio = cenario.getInicio();
-
-		pontos[fim.getX()][fim.getY()] = INICIO;
-
-		for (int i = 0; i < pontos.length; i++) {
-			int count = 0;
-			for (int j = 0; j < pontos[i].length; j++) {
-				if (pontos[i][j] == OBSTACULO) {
-					if (count > 0) {
-						if ((count % 2) == 0) {
-							pontos[i][(count / 2)] = VERDE;
-						} else {
-							pontos[i][(int) ((count / 2) + 0.5)] = VERDE;
-						}
-					}
-					count = 0;
-				} else {
-					count++;
-				}
-			}
-		}
-
-		for (int i = 0; i < pontos.length; i++) {
-			for (int j = 0; j < pontos[i].length; j++) {
-				if (((j < (pontos[i].length - 1)) && (pontos[i][j + 1] == VERDE)) || ((j > 0) && (pontos[i][j - 1] == VERDE))) {
-					pontos[i][j] = AMARELO;
-				}
+	for (int i = 0; i < pontos.length; i++) {
+		for (int j = 0; j < pontos[i].length; j++) {
+			if (((j < (pontos[i].length - 1)) && (pontos[i][j + 1] == VERDE)) || ((j > 0) && (pontos[i][j - 1] == VERDE))) {
+				pontos[i][j] = AMARELO;
 			}
 		}
 	}
-	/*
-	 * 0 - 0 0 0 0 0 0 0 - 0 0 0 0 0 0 - 1 0 0 - 0 0 0 0 0 0 0 - 0 - 0 - 0 0 0 2
-	 * 0 0 - 0 -
-	 * 
-	 * 
-	 * 0 0 0 0 0 0 0 0 - 0 0 0 0 0 0 - 0 0 1 - 0 0 - 0 0 0 - 0 0 0 0 0 0 0 - 0 0
-	 * 0 0 - 0 1
-	 * 
-	 * 
-	 * 
-	 * 10 -1 10 11 12 13 9 8 9 -1 13 12 8 7 8 9 -1 11 7 6 -1 8 9 10 6 5 6 7 -1
-	 * 11 -1 4 -1 8 9 10 2 3 4 -1 10 -1
-	 */
+}
+/*
+ * 0 - 0 0 0 0 0 0 0 - 0 0 0 0 0 0 - 1 0 0 - 0 0 0 0 0 0 0 - 0 - 0 - 0 0 0 2
+ * 0 0 - 0 -
+ *
+ *
+ * 0 0 0 0 0 0 0 0 - 0 0 0 0 0 0 - 0 0 1 - 0 0 - 0 0 0 - 0 0 0 0 0 0 0 - 0 0
+ * 0 0 - 0 1
+ *
+ *
+ *
+ * 10 -1 10 11 12 13 9 8 9 -1 13 12 8 7 8 9 -1 11 7 6 -1 8 9 10 6 5 6 7 -1
+ * 11 -1 4 -1 8 9 10 2 3 4 -1 10 -1
+ */
 }
