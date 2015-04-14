@@ -1,22 +1,28 @@
 package dev;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import lejos.nxt.Button;
+import lejos.nxt.Motor;
+
 public class MapaTrapezoidal {
 
-	private int[][]		pontos;
-	private Ponto		inicio;
-	private Ponto		fim;
+	private int[][] pontos;
+	private Ponto inicio;
+	private Ponto fim;
 
-	private static int	VERDE		= 1;
-	private static int	AMARELO		= 2;
-	private static int	BRANCO		= 0;
-	private static int	INICIO		= 3;
-	private static int	OBSTACULO	= -1;
-	private static int	AZUL		= 4;
+	private static int VERDE = 1;
+	private static int AMARELO = 2;
+	private static int BRANCO = 0;
+	private static int INICIO = 3;
+	private static int OBSTACULO = -1;
+	private static int AZUL = 4;
 
-	private static int	NORMAL		= 165;
-	private static int	MAX			= 330;
+	private static int NORMAL = 165;
+	private static int MAX = 330;
 
-	private static int	FRENTE		= 410;
+	private static int FRENTE = 410;
 
 	public static void main(final String[] args) {
 		MapaTrapezoidal mapa = new MapaTrapezoidal();
@@ -34,6 +40,11 @@ public class MapaTrapezoidal {
 
 		List<Passo> passos = new ArrayList<Passo>();
 		mapa.encontrarPassos(passos, mapa.inicio, null);
+		
+		for(Passo p: passos){
+			System.out.println(p);
+		}
+		
 		Passo last = Passo.CIMA;
 		boolean first = true;
 		while (passos.size() > 0) {
@@ -153,10 +164,11 @@ public class MapaTrapezoidal {
 		Motor.C.rotate(NORMAL);
 	}
 
-	private void encontrarPassos(final List<Passo> passos, final Ponto ponto, final Ponto ultimoPonto) {
+	private void encontrarPassos(final List<Passo> passos, Ponto ponto,
+			final Ponto ultimoPonto) {
 		List<Passo> p = azulNaMesmaColuna(ponto);
 		while (p != null) {
-			passos.add(p);
+			passos.addAll(p);
 		}
 		Passo passo = getVerdeEmAlgumaDirecao(ponto);
 		if (passo != null) {
@@ -176,116 +188,146 @@ public class MapaTrapezoidal {
 			}
 		}
 	}
-}
 
-private void marcaJafoi(final Ponto ponto) {
-	pontos[ponto.getX()][ponto.getY()] = OBSTACULO;
-}
-
-private Passo emAlgumaDirecao(final Ponto ponto, final int cor) {
-	if (ponto.getY() != (pontos[0].length - 1)) {
-		if (pontos[ponto.getX()][ponto.getY() + 1] == cor) {
-			return Passo.DIREITA;
-		}
+	private void marcaJafoi(final Ponto ponto) {
+		pontos[ponto.getX()][ponto.getY()] = OBSTACULO;
 	}
-	if (ponto.getY() > 0) {
-		if (pontos[ponto.getX()][ponto.getY() - 1] == cor) {
-			return Passo.ESQUERDA;
-		}
-	}
-	if (ponto.getX() != (pontos.length - 1)) {
-		if (pontos[ponto.getX() + 1][ponto.getY()] == cor) {
-			return Passo.BAIXO;
-		}
-	}
-	if (ponto.getX() > 0) {
-		if (pontos[ponto.getX() - 1][ponto.getY()] == cor) {
-			return Passo.CIMA;
-		}
-	}
-	return null;
-}
 
-private Passo getBrancoEmAlgumaDirecao(final Ponto ponto) {
-	return emAlgumaDirecao(ponto, BRANCO);
-}
-
-private Passo getAmareloEmAlgumaDirecao(final Ponto ponto) {
-	return emAlgumaDirecao(ponto, AMARELO);
-}
-
-private Passo getVerdeEmAlgumaDirecao(final Ponto ponto) {
-	return emAlgumaDirecao(ponto, VERDE);
-}
-
-private List<Passo> azulNaMesmaColuna(final Ponto ponto) {
-	for (int i = ponto.getX(); i < pontos.length; i++) {
-		if (pontos[i][ponto.getY() == AZUL]) {
-			List<Passo> passos = new ArrayList();
-			for (int j = 0; j < (i - ponto.getX()); j++) {
-				passos.add(Passo.BAIXO);
+	private Passo emAlgumaDirecao(final Ponto ponto, final int cor) {
+		if (ponto.getY() != (pontos[0].length - 1)) {
+			if (pontos[ponto.getX()][ponto.getY() + 1] == cor) {
+				return Passo.DIREITA;
 			}
-			return passos;
 		}
-	}
-	for (int i = ponto.getX(); i < pontos.length; i--) {
-		if (pontos[i][ponto.getY() == AZUL]) {
-			List<Passo> passos = new ArrayList();
-			for (int j = 0; j < (i - ponto.getX()); j++) {
-				passos.add(Passo.CIMA);
+		if (ponto.getY() > 0) {
+			if (pontos[ponto.getX()][ponto.getY() - 1] == cor) {
+				return Passo.ESQUERDA;
 			}
-			return passos;
 		}
+		if (ponto.getX() != (pontos.length - 1)) {
+			if (pontos[ponto.getX() + 1][ponto.getY()] == cor) {
+				return Passo.BAIXO;
+			}
+		}
+		if (ponto.getX() > 0) {
+			if (pontos[ponto.getX() - 1][ponto.getY()] == cor) {
+				return Passo.CIMA;
+			}
+		}
+		return null;
 	}
-}
 
-private void calcularPontosMediosEIntersecoes(final Cenario cenario) {
-	pontos = new int[cenario.getLinhas()][cenario.getColunas()];
-	for (Ponto p : cenario.getPontosInvalidos()) {
-		pontos[p.getX()][p.getY()] = -1;
+	private Passo getBrancoEmAlgumaDirecao(final Ponto ponto) {
+		return emAlgumaDirecao(ponto, BRANCO);
 	}
-	fim = cenario.getFim();
-	inicio = cenario.getInicio();
 
-	pontos[fim.getX()][fim.getY()] = INICIO;
+	private Passo getAmareloEmAlgumaDirecao(final Ponto ponto) {
+		return emAlgumaDirecao(ponto, AMARELO);
+	}
 
-	for (int i = 0; i < pontos.length; i++) {
-		int count = 0;
-		for (int j = 0; j < pontos[i].length; j++) {
-			if (pontos[i][j] == OBSTACULO) {
-				if (count > 0) {
-					if ((count % 2) == 0) {
-						pontos[i][(count / 2)] = VERDE;
+	private Passo getVerdeEmAlgumaDirecao(final Ponto ponto) {
+		return emAlgumaDirecao(ponto, VERDE);
+	}
+
+	private List<Passo> azulNaMesmaColuna(final Ponto ponto) {
+		for (int i = ponto.getX(); i < pontos.length; i++) {
+			if (pontos[i][ponto.getY()] == AZUL) {
+				List<Passo> passos = new ArrayList<Passo>();
+				for (int j = 0; j < (i - ponto.getX()); j++) {
+					passos.add(Passo.BAIXO);
+				}
+				return passos;
+			}
+		}
+		for (int i = ponto.getX(); i < 0; i--) {
+			if (pontos[i][ponto.getY()] == AZUL) {
+				List<Passo> passos = new ArrayList<Passo>();
+				for (int j = 0; j < (i - ponto.getX()); j++) {
+					passos.add(Passo.CIMA);
+				}
+				return passos;
+			}
+		}
+		return null;
+	}
+
+	private void calcularPontosMediosEIntersecoes(final Cenario cenario) {
+		pontos = new int[cenario.getLinhas()][cenario.getColunas()];
+		for (Ponto p : cenario.getPontosInvalidos()) {
+			pontos[p.getX()][p.getY()] = -1;
+		}
+		fim = cenario.getFim();
+		inicio = cenario.getInicio();
+
+		pontos[inicio.getX()][inicio.getY()] = INICIO;
+		pontos[fim.getX()][fim.getY()] = AZUL;
+
+		for (int i = 0; i < pontos[0].length; i++) {
+			int count = 0;
+			int linha = 0;
+			for (int j = 0; j < pontos.length; j++) {
+				if (pontos[j][i] == OBSTACULO) {
+					if (count > 0) {
+						if ((count % 2) == 0) {
+							pontos[linha + (count / 2)][i] = VERDE;
+						} else {
+							pontos[linha + (int) ((count / 2) + 0.5)][i] = VERDE;
+						}
+					}
+					linha += count;
+					count = 0;
+				} else {
+					if ((j == pontos.length - 1) && (pontos[j][i] == BRANCO)) {
+						count++;
+						if ((count % 2) == 0) {
+							pontos[linha + (count / 2)][i] = VERDE;
+						} else {
+							pontos[linha + (int) ((count / 2) + 0.5)][i] = VERDE;
+						}
+						linha += count;
+						count = 0;
 					} else {
-						pontos[i][(int) ((count / 2) + 0.5)] = VERDE;
+						count++;
 					}
 				}
-				count = 0;
-			} else {
-				count++;
 			}
 		}
-	}
+		
+		for (int i = 0; i < pontos.length; i++) {
+			String str = "";
+			for (int j = 0; j < pontos[i].length; j++) {
+				str += pontos[i][j] + " ";
+			}
+			System.out.println(str);
+		}
+		
+		System.out.println("");
 
-	for (int i = 0; i < pontos.length; i++) {
-		for (int j = 0; j < pontos[i].length; j++) {
-			if (((j < (pontos[i].length - 1)) && (pontos[i][j + 1] == VERDE)) || ((j > 0) && (pontos[i][j - 1] == VERDE))) {
-				pontos[i][j] = AMARELO;
+		for (int i = 0; i < pontos.length; i++) {
+			for (int j = 0; j < pontos[i].length; j++) {
+				if (((j < (pontos[0].length - 1)) && (pontos[i][j+1] == VERDE))
+						|| ((j > 0) && (pontos[i][j-1] == VERDE))) {
+					pontos[i][j] = AMARELO;
+				}
 			}
 		}
 	}
 }
 /*
- * 0 - 0 0 0 0 0 0 0 - 0 0 0 0 0 0 - 1 0 0 - 0 0 0 0 0 0 0 - 0 - 0 - 0 0 0 2
- * 0 0 - 0 -
- *
- *
- * 0 0 0 0 0 0 0 0 - 0 0 0 0 0 0 - 0 0 1 - 0 0 - 0 0 0 - 0 0 0 0 0 0 0 - 0 0
- * 0 0 - 0 1
- *
- *
- *
- * 10 -1 10 11 12 13 9 8 9 -1 13 12 8 7 8 9 -1 11 7 6 -1 8 9 10 6 5 6 7 -1
- * 11 -1 4 -1 8 9 10 2 3 4 -1 10 -1
- */
-}
+0  -1 0  1  0 0 
+0  0  1  -1 1 0 
+1  0  0  0  1 4 
+0  1  1  1  0 1 
+0  0  1  0  1 0 
+-1 0  -1 0  0 0 
+3  0  0  -1 0 -1 
+*/
+/*
+0  -1 2  1  2  0 
+2  0  1  2  1  0 
+1  2  2  1  2  2 
+2  1  -1 2  0  1 
+0  2  0  0  -1 2 
+-1 0  -1 0  0  0 
+3  0  0  -1 0  -1
+*/

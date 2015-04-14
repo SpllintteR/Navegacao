@@ -25,10 +25,8 @@ public class Ponto {
 	public void setY(final int y) {
 		this.y = y;
 	}
-
-	@Override
-	public boolean equals(final int x; final int y) {
+	
+	public boolean equals(final int x, final int y) {
 		return (getX() == x) && (getY() == y);
 	}
-
 }
