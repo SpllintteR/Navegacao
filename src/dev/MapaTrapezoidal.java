@@ -8,26 +8,26 @@ import lejos.nxt.Motor;
 
 public class MapaTrapezoidal {
 
-	private int[][] pontos;
-	private Ponto inicio;
-	private Ponto fim;
+	private int[][]		pontos;
+	private Ponto		inicio;
+	private Ponto		fim;
 
-	private static int VERDE = 1;
-	private static int AMARELO = 2;
-	private static int BRANCO = 0;
-	private static int INICIO = 3;
-	private static int OBSTACULO = -1;
-	private static int AZUL = 4;
+	private static int	VERDE		= 1;
+	private static int	AMARELO		= 2;
+	private static int	BRANCO		= 0;
+	private static int	INICIO		= 3;
+	private static int	OBSTACULO	= -1;
+	private static int	AZUL		= 4;
 
-	private static int NORMAL = 165;
-	private static int MAX = 330;
+	private static int	NORMAL		= 165;
+	private static int	MAX			= 330;
 
-	private static int FRENTE = 410;
+	private static int	FRENTE		= 410;
 
 	public static void main(final String[] args) {
 		MapaTrapezoidal mapa = new MapaTrapezoidal();
-		// Cenario cenario = montarCenario1();
-		Cenario cenario = montarCenario2();
+		Cenario cenario = montarCenario1();
+		//		Cenario cenario = montarCenario2();
 		mapa.calcularPontosMediosEIntersecoes(cenario);
 
 		for (int i = 0; i < mapa.pontos.length; i++) {
@@ -40,8 +40,8 @@ public class MapaTrapezoidal {
 
 		List<Passo> passos = new ArrayList<Passo>();
 		mapa.encontrarPassos(passos, mapa.inicio, null);
-		
-		for(Passo p: passos){
+
+		for (Passo p : passos) {
 			System.out.println(p);
 		}
 		
@@ -126,7 +126,6 @@ public class MapaTrapezoidal {
 		cenario.addPontoInvalido(new Ponto(3, 1));
 		cenario.addPontoInvalido(new Ponto(4, 2));
 		cenario.addPontoInvalido(new Ponto(5, 4));
-		cenario.addPontoInvalido(new Ponto(5, 2));
 		cenario.addPontoInvalido(new Ponto(6, 3));
 		return cenario;
 	}
@@ -164,28 +163,37 @@ public class MapaTrapezoidal {
 		Motor.C.rotate(NORMAL);
 	}
 
-	private void encontrarPassos(final List<Passo> passos, Ponto ponto,
-			final Ponto ultimoPonto) {
+	private void encontrarPassos(final List<Passo> passos, Ponto ponto, final Ponto ultimoPonto) {
+		Ponto aux = new Ponto(ponto.getX(), ponto.getY());
 		List<Passo> p = azulNaMesmaColuna(ponto);
-		while (p != null) {
+		if (p != null) {
 			passos.addAll(p);
-		}
-		Passo passo = getVerdeEmAlgumaDirecao(ponto);
-		if (passo != null) {
-			passos.add(passo);
 		} else {
-			passo = getAmareloEmAlgumaDirecao(ponto);
-			if (passo != null) {
-				passos.add(passo);
+			if (direita(ponto, VERDE) || direita(ponto, AMARELO) || direita(ponto, BRANCO)) {
+				ponto.setX(ponto.getX());
+				ponto.setY(ponto.getY() + 1);
+				passos.add(Passo.DIREITA);
 			} else {
-				passo = getBrancoEmAlgumaDirecao(ponto);
+				Passo passo = getVerdeEmAlgumaDirecao(ponto, passos.size() > 0 ? passos.get(passos.size() - 1) : null);
 				if (passo != null) {
 					passos.add(passo);
 				} else {
-					marcaJafoi(ponto);
-					ponto = ultimoPonto;
+					passo = getAmareloEmAlgumaDirecao(ponto, passos.size() > 0 ? passos.get(passos.size() - 1) : null);
+					if (passo != null) {
+						passos.add(passo);
+					} else {
+						passo = getBrancoEmAlgumaDirecao(ponto, passos.size() > 0 ? passos.get(passos.size() - 1) : null);
+						if (passo != null) {
+							passos.add(passo);
+						} else {
+							marcaJafoi(ponto);
+							passos.remove(passos.size() - 1);
+							ponto = ultimoPonto;
+						}
+					}
 				}
 			}
+			encontrarPassos(passos, ponto, aux);
 		}
 	}
 
@@ -193,40 +201,53 @@ public class MapaTrapezoidal {
 		pontos[ponto.getX()][ponto.getY()] = OBSTACULO;
 	}
 
-	private Passo emAlgumaDirecao(final Ponto ponto, final int cor) {
-		if (ponto.getY() != (pontos[0].length - 1)) {
-			if (pontos[ponto.getX()][ponto.getY() + 1] == cor) {
-				return Passo.DIREITA;
-			}
+	private Passo emAlgumaDirecao(final Ponto ponto, final int cor, final Passo ultimoPasso) {
+		if (direita(ponto, cor) && (ultimoPasso != Passo.ESQUERDA)) {
+			ponto.setX(ponto.getX());
+			ponto.setY(ponto.getY() + 1);
+			return Passo.DIREITA;
 		}
 		if (ponto.getY() > 0) {
-			if (pontos[ponto.getX()][ponto.getY() - 1] == cor) {
+			if ((pontos[ponto.getX()][ponto.getY() - 1] == cor) && (ultimoPasso != Passo.DIREITA)) {
+				ponto.setX(ponto.getX());
+				ponto.setY(ponto.getY() - 1);
 				return Passo.ESQUERDA;
 			}
 		}
 		if (ponto.getX() != (pontos.length - 1)) {
-			if (pontos[ponto.getX() + 1][ponto.getY()] == cor) {
+			if ((pontos[ponto.getX() + 1][ponto.getY()] == cor) && (ultimoPasso != Passo.CIMA)) {
+				ponto.setX(ponto.getX() + 1);
+				ponto.setY(ponto.getY());
 				return Passo.BAIXO;
 			}
 		}
 		if (ponto.getX() > 0) {
-			if (pontos[ponto.getX() - 1][ponto.getY()] == cor) {
+			if ((pontos[ponto.getX() - 1][ponto.getY()] == cor) && (ultimoPasso != Passo.BAIXO)) {
+				ponto.setX(ponto.getX() - 1);
+				ponto.setY(ponto.getY());
 				return Passo.CIMA;
 			}
 		}
 		return null;
 	}
 
-	private Passo getBrancoEmAlgumaDirecao(final Ponto ponto) {
-		return emAlgumaDirecao(ponto, BRANCO);
+	private boolean direita(final Ponto ponto, final int cor) {
+		if (!(ponto.getY() != (pontos[0].length - 1))) {
+			return false;
+		}
+		return pontos[ponto.getX()][ponto.getY() + 1] == cor;
 	}
 
-	private Passo getAmareloEmAlgumaDirecao(final Ponto ponto) {
-		return emAlgumaDirecao(ponto, AMARELO);
+	private Passo getBrancoEmAlgumaDirecao(final Ponto ponto, final Passo ultimoPasso) {
+		return emAlgumaDirecao(ponto, BRANCO, ultimoPasso);
 	}
 
-	private Passo getVerdeEmAlgumaDirecao(final Ponto ponto) {
-		return emAlgumaDirecao(ponto, VERDE);
+	private Passo getAmareloEmAlgumaDirecao(final Ponto ponto, final Passo ultimoPasso) {
+		return emAlgumaDirecao(ponto, AMARELO, ultimoPasso);
+	}
+
+	private Passo getVerdeEmAlgumaDirecao(final Ponto ponto, final Passo ultimoPasso) {
+		return emAlgumaDirecao(ponto, VERDE, ultimoPasso);
 	}
 
 	private List<Passo> azulNaMesmaColuna(final Ponto ponto) {
@@ -239,9 +260,19 @@ public class MapaTrapezoidal {
 				return passos;
 			}
 		}
-		for (int i = ponto.getX(); i < 0; i--) {
+		for (int i = ponto.getX(); i > 0; i--) {
 			if (pontos[i][ponto.getY()] == AZUL) {
 				List<Passo> passos = new ArrayList<Passo>();
+				if (i < ponto.getX()) {
+					for (int j = 0; j < (ponto.getX() - i); j++) {
+						passos.add(Passo.CIMA);
+					}
+				} else {
+					for (int j = 0; j < (i - ponto.getX()); j++) {
+						passos.add(Passo.BAIXO);
+					}
+				}
+
 				for (int j = 0; j < (i - ponto.getX()); j++) {
 					passos.add(Passo.CIMA);
 				}
@@ -274,17 +305,17 @@ public class MapaTrapezoidal {
 							pontos[linha + (int) ((count / 2) + 0.5)][i] = VERDE;
 						}
 					}
-					linha += count;
+					linha += count + 1;
 					count = 0;
 				} else {
-					if ((j == pontos.length - 1) && (pontos[j][i] == BRANCO)) {
+					if ((j == (pontos.length - 1)) && (pontos[j][i] == BRANCO)) {
 						count++;
 						if ((count % 2) == 0) {
 							pontos[linha + (count / 2)][i] = VERDE;
 						} else {
 							pontos[linha + (int) ((count / 2) + 0.5)][i] = VERDE;
 						}
-						linha += count;
+						linha += count + 1;
 						count = 0;
 					} else {
 						count++;
@@ -292,7 +323,7 @@ public class MapaTrapezoidal {
 				}
 			}
 		}
-		
+
 		for (int i = 0; i < pontos.length; i++) {
 			String str = "";
 			for (int j = 0; j < pontos[i].length; j++) {
@@ -300,13 +331,13 @@ public class MapaTrapezoidal {
 			}
 			System.out.println(str);
 		}
-		
+
 		System.out.println("");
 
 		for (int i = 0; i < pontos.length; i++) {
 			for (int j = 0; j < pontos[i].length; j++) {
-				if (((j < (pontos[0].length - 1)) && (pontos[i][j+1] == VERDE))
-						|| ((j > 0) && (pontos[i][j-1] == VERDE))) {
+				if ((((j < (pontos[0].length - 1)) && (pontos[i][j + 1] == VERDE)) || ((j > 0) && (pontos[i][j - 1] == VERDE)))
+						&& (pontos[i][j] == BRANCO)) {
 					pontos[i][j] = AMARELO;
 				}
 			}
@@ -314,20 +345,10 @@ public class MapaTrapezoidal {
 	}
 }
 /*
-0  -1 0  1  0 0 
-0  0  1  -1 1 0 
-1  0  0  0  1 4 
-0  1  1  1  0 1 
-0  0  1  0  1 0 
--1 0  -1 0  0 0 
-3  0  0  -1 0 -1 
-*/
+ * 0 -1 0 1 0 0 0 0 1 -1 1 0 1 0 0 0 1 4 0 1 1 1 0 1 0 0 1 0 1 0 -1 0 -1 0 0 0 3
+ * 0 0 -1 0 -1
+ */
 /*
-0  -1 2  1  2  0 
-2  0  1  2  1  0 
-1  2  2  1  2  2 
-2  1  -1 2  0  1 
-0  2  0  0  -1 2 
--1 0  -1 0  0  0 
-3  0  0  -1 0  -1
-*/
+ * 0 -1 2 1 2 0 2 0 1 2 1 0 1 2 2 1 2 2 2 1 -1 2 0 1 0 2 0 0 -1 2 -1 0 -1 0 0 0
+ * 3 0 0 -1 0 -1
+ */
